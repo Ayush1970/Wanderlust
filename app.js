@@ -23,17 +23,17 @@ const userRouter=require("./routes/user.js");
 
 const dbUrl = process.env.ATLASDB_URL;
 
-main()
-.then(()=>{
-    console.log("connected to DB");
-})
-.catch((err)=>{
-    console.log(err);
-});
-
 async function main(){
     await mongoose.connect(dbUrl);
+    console.log("connected to DB");
+
+    const PORT = process.env.PORT || 8080;
+
+    app.listen(PORT, () => {
+        console.log(`server is listening on port ${PORT}`);
+    });
 }
+
 
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
@@ -49,7 +49,7 @@ const store=MongoStore.create({
     touchAfter:24 * 3600,
 });
 
-store.on("error",()=>{
+store.on("error",(err)=>{
     console.log("ERROR in MONGO SESSION STORE",err);
 })
 
@@ -88,6 +88,10 @@ app.use((req,res,next)=>{
     next();
 })
 
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
+
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
@@ -106,6 +110,5 @@ app.use((err,req,res,next)=>{
     res.status(statusCode).render("error.ejs",{message});
 });
 
-app.listen(8080,()=>{
-    console.log("server is listening on port 8080");
-})
+main().catch(console.log);
+
